@@ -1,0 +1,44 @@
+pipeline {
+  agent any
+
+  stages {
+    stage('Build') {
+      steps {
+        echo 'Building the application...'
+      }
+    }
+
+    stage('Test') {
+      steps {
+        echo 'Running tests...'
+      }
+    }
+
+    stage('List workspace files') {
+      steps {
+        script {
+          if (isUnix()) {
+            sh 'ls -l'
+          } else {
+            bat 'dir'
+          }
+        }
+      }
+    }
+
+    stage('Deploy') {
+      steps {
+        echo 'Deploying the application...'
+      }
+    }
+  }
+
+  post {
+    success {
+      echo 'Pipeline completed successfully 🎉'
+    }
+    failure {
+      echo 'Pipeline failed ❌'
+    }
+  }
+}
