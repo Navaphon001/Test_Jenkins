@@ -1,0 +1,44 @@
+pipeline {
+  agent any
+
+  // ⬇️ เพิ่มพารามิเตอร์ที่หน้ารัน Job
+  parameters {
+    booleanParam(
+      name: 'RUN_DEPLOY',
+      defaultValue: true,
+      description: 'Should we deploy?'
+    )
+  }
+
+  stages {
+    stage('Build') {
+      steps {
+        echo 'Building application...'
+      }
+    }
+
+    stage('Test') {
+      steps {
+        echo 'Running tests...'
+      }
+    }
+
+    stage('Deploy') {
+      // ⬇️ เงื่อนไข: รัน Deploy เฉพาะเมื่อเลือก RUN_DEPLOY = true
+      when {
+        expression { return params.RUN_DEPLOY }
+      }
+      steps {
+        echo 'Deploying application...'
+        // ตัวอย่างคำสั่งจริง ๆ (เลือกใส่ได้)
+        // sh './deploy.sh'
+        // หรือบน Windows: bat '.\\deploy.bat'
+      }
+    }
+  }
+
+  post {
+    success { echo 'Pipeline completed successfully 🎉' }
+    failure { echo 'Pipeline failed ❌' }
+  }
+}
