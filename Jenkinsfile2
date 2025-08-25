@@ -1,0 +1,34 @@
+pipeline {
+  agent any
+
+  stages {
+    stage('Build') {
+      steps {
+        echo 'Building application...'
+      }
+    }
+
+    stage('Test in Parallel') {
+      parallel {
+        stage('Unit Tests') {
+          steps {
+            echo 'Running unit tests...'
+            // ใช้ sleep ของ Jenkins ให้ข้าม platform ได้
+            sleep time: 5, unit: 'SECONDS'
+          }
+        }
+        stage('Integration Tests') {
+          steps {
+            echo 'Running integration tests...'
+            sleep time: 5, unit: 'SECONDS'
+          }
+        }
+      }
+    }
+  }
+
+  post {
+    success { echo 'Pipeline completed successfully 🎉' }
+    failure { echo 'Pipeline failed ❌' }
+  }
+}
