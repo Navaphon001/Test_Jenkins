@@ -1,0 +1,71 @@
+pipeline {
+  agent any
+
+  parameters {
+    booleanParam(name: 'RUN_DEPLOY', defaultValue: true,  description: 'Should we deploy?')
+    booleanParam(name: 'RUN_FAIL',   defaultValue: false, description: 'Intentionally fail the pipeline?')
+  }
+
+  stages {
+    stage('Build') {
+      steps {
+        echo 'Building application...'
+      }
+    }
+
+    stage('Test') {
+      steps {
+        // สร้างไฟล์ผลลัพธ์เก็บเป็น artifact
+        script {
+          if (isUnix()) {
+            sh 'echo "All tests passed!" > results.txt'
+          } else {
+            bat 'echo All tests passed! > results.txt'
+          }
+        }
+        archiveArtifacts artifacts: 'results.txt', fingerprint: true
+      }
+    }
+
+    stage('Approval') {
+      when { expression { return params.RUN_DEPLOY } }
+      steps {
+        input "Do you want to proceed with deployment?"
+      }
+    }
+
+    stage('Deploy') {
+      when { expression { return params.RUN_DEPLOY } }
+      steps {
+        echo 'Deploying application...'
+      }
+    }
+
+    stage('Force Failure (for testing)') {
+      when { expression { return params.RUN_FAIL } }
+      steps {
+        script {
+          // ทำให้ล้มเหลวโดยตั้งใจ
+          if (isUnix()) {
+            sh 'exit 1'
+          } else {
+            bat 'exit /b 1'
+          }
+          // หรือจะใช้: error("Failed intentionally")
+        }
+      }
+    }
+  }
+
+  post {
+    success {
+      echo '✅ Pipeline finished successfully!'
+    }
+    failure {
+      echo '❌ Pipeline failed. Check logs!'
+    }
+    always {
+      echo 'Pipeline completed (success or failure).'
+    }
+  }
+}
