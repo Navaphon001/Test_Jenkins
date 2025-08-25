@@ -1,0 +1,43 @@
+pipeline {
+  agent any
+
+  parameters {
+    booleanParam(
+      name: 'RUN_DEPLOY',
+      defaultValue: true,
+      description: 'Should we deploy?'
+    )
+  }
+
+  stages {
+    stage('Build') {
+      steps {
+        echo 'Building application...'
+      }
+    }
+
+    stage('Test') {
+      steps {
+        // ✅ สร้างไฟล์ผลลัพธ์
+        sh 'echo "All tests passed!" > results.txt'
+
+        // ✅ เก็บไฟล์เป็น artifact
+        archiveArtifacts artifacts: 'results.txt', fingerprint: true
+      }
+    }
+
+    stage('Deploy') {
+      when {
+        expression { return params.RUN_DEPLOY }
+      }
+      steps {
+        echo 'Deploying application...'
+      }
+    }
+  }
+
+  post {
+    success { echo 'Pipeline completed successfully 🎉' }
+    failure { echo 'Pipeline failed ❌' }
+  }
+}
