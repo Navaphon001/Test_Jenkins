@@ -1,0 +1,67 @@
+pipeline {
+  agent any
+
+  parameters {
+    choice(
+      name: 'ENV',
+      choices: ['dev', 'staging', 'prod'],
+      description: 'Select environment for deployment'
+    )
+  }
+
+  stages {
+    stage('Build') {
+      steps {
+        echo 'Building application...'
+        // ถ้าอยากทดสอบให้ fail: sh 'exit 1'
+      }
+    }
+
+    stage('Unit Tests') {
+      // Unit Tests จะรันก็ต่อเมื่อ Build สำเร็จ
+      when {
+        expression { currentBuild.currentResult == 'SUCCESS' }
+      }
+      steps {
+        echo 'Running unit tests...'
+      }
+    }
+
+    stage('Test in Parallel') {
+      parallel {
+        stage('Linux Tests') {
+          steps {
+            echo 'Simulating tests on Linux 🐧'
+          }
+        }
+        stage('Windows Tests') {
+          steps {
+            echo 'Simulating tests on Windows 🪟'
+          }
+        }
+      }
+    }
+
+    stage('Approval') {
+      steps {
+        script {
+          timeout(time: 2, unit: 'MINUTES') {
+            input message: "Do you want to proceed with deployment to ${params.ENV}?"
+          }
+        }
+      }
+    }
+
+    stage('Deploy') {
+      steps {
+        echo "🚀 Deploying application to ${params.ENV} environment..."
+      }
+    }
+  }
+
+  post {
+    success { echo '✅ Pipeline finished successfully!' }
+    failure { echo '❌ Pipeline failed. Check logs!' }
+    always  { echo 'Pipeline completed (success or failure).' }
+  }
+}
